@@ -1,11 +1,13 @@
 /* Header and Account Styles */
 .header {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   padding: 0.5rem;
   border-bottom: 1px solid lightgray;
+  background: white;
+  z-index: 100;
 }
 
 .navbar {
@@ -82,4 +84,16 @@
   height: 1px;
   background: #e0e0e0;
   margin: 0 0.5rem;
+}
+
+/* Navigation Links */
+.nav-link {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: #646cff;
 }
