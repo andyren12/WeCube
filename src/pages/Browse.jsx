@@ -78,11 +78,12 @@ function Browse() {
         setLoadingMore(true);
       }
 
-      // Build query for paginated results (3 items for testing)
+      // Build query for paginated results (request one extra to check if there are more)
+      const requestLimit = 4;
       let listingsQuery = query(
         collection(db, "listings"),
         orderBy("createdAt", "desc"),
-        limit(3)
+        limit(requestLimit + 1)
       );
 
       // Add pagination cursor if loading more
@@ -91,30 +92,27 @@ function Browse() {
           collection(db, "listings"),
           orderBy("createdAt", "desc"),
           startAfter(lastDoc),
-          limit(3)
+          limit(requestLimit + 1)
         );
       }
 
       const listingsSnapshot = await getDocs(listingsQuery);
-      const listingsData = listingsSnapshot.docs.map((doc) => ({
+      const allDocs = listingsSnapshot.docs;
+
+      // Check if there are more items than our limit
+      const hasMoreItems = allDocs.length > requestLimit;
+      setHasMore(hasMoreItems);
+
+      // Only take the requested number of items (remove the extra one we fetched)
+      const docsToUse = hasMoreItems ? allDocs.slice(0, requestLimit) : allDocs;
+      const listingsData = docsToUse.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
 
-      // Update last document for pagination
-      const lastDocument =
-        listingsSnapshot.docs[listingsSnapshot.docs.length - 1];
+      // Update last document for pagination (use the last item we're actually displaying)
+      const lastDocument = docsToUse[docsToUse.length - 1];
       setLastDoc(lastDocument);
-
-      // Check if there are more items (if we got fewer than requested, we're at the end)
-      const hasMoreItems = listingsSnapshot.docs.length === 3;
-      setHasMore(hasMoreItems);
-
-      console.log(
-        `Fetch ${isLoadMore ? "more" : "initial"}: Got ${
-          listingsSnapshot.docs.length
-        } items, hasMore: ${hasMoreItems}`
-      );
 
       if (isLoadMore) {
         // Filter out any duplicates before adding
