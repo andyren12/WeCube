@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Browse from "./pages/Browse";
 import Competitions from "./pages/Competitions";
 import Sell from "./pages/Sell";
+import ListingDetail from "./pages/ListingDetail";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
               <Route path="/browse" element={<Browse />} />
               <Route path="/competitions" element={<Competitions />} />
               <Route path="/sell" element={<Sell />} />
+              <Route path="/listing/:id" element={<ListingDetail />} />
               <Route
                 path="/my-listings"
                 element={

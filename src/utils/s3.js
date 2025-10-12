@@ -40,8 +40,7 @@ export async function uploadImageToS3(file, listingId) {
     Key: s3Key,
     Body: new Uint8Array(fileBuffer),
     ContentType: file.type,
-    // Private access - requires authentication to view
-    ACL: 'private',
+    // ACL removed - bucket configured to not allow ACLs
     Metadata: {
       'original-name': file.name,
       'listing-id': listingId,

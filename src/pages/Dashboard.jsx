@@ -25,6 +25,7 @@ import {
   Delete,
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../contexts/AuthContext";
@@ -40,6 +41,7 @@ function Dashboard() {
   const [pastSales, setPastSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (currentUser) {
@@ -283,7 +285,13 @@ function Dashboard() {
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
+                              cursor: "pointer",
+                              textDecoration: "none",
+                              "&:hover": {
+                                color: "primary.main",
+                              },
                             }}
+                            onClick={() => navigate(`/listing/${listing.id}`)}
                           >
                             {listing.title}
                           </Typography>
@@ -307,7 +315,11 @@ function Dashboard() {
                       </TableCell>
                       <TableCell>
                         <Stack direction="row" spacing={1}>
-                          <Button size="small" startIcon={<Edit />}>
+                          <Button
+                            size="small"
+                            startIcon={<Edit />}
+                            onClick={() => navigate(`/listing/${listing.id}`)}
+                          >
                             Edit
                           </Button>
                           <Button
