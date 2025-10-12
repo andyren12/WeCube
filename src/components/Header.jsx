@@ -17,15 +17,14 @@ import {
   DialogActions,
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
-import { Login } from "./Login";
-import { Register } from "./Register";
+import { AuthModal } from "./AuthModal";
 import logo from "../assets/wecube-logo.png";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 
 function Header() {
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState("login");
   const [anchorEl, setAnchorEl] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { currentUser, logout } = useAuth();
@@ -33,19 +32,13 @@ function Header() {
 
   const isMenuOpen = Boolean(anchorEl);
 
-  const switchToRegister = () => {
-    setShowLogin(false);
-    setShowRegister(true);
-  };
-
-  const switchToLogin = () => {
-    setShowRegister(false);
-    setShowLogin(true);
+  const openAuth = (mode = "login") => {
+    setAuthMode(mode);
+    setShowAuth(true);
   };
 
   const closeModals = () => {
-    setShowLogin(false);
-    setShowRegister(false);
+    setShowAuth(false);
     setShowLogoutConfirm(false);
   };
 
@@ -53,7 +46,7 @@ function Header() {
     if (currentUser) {
       setAnchorEl(event.currentTarget);
     } else {
-      setShowLogin(true);
+      openAuth("login");
     }
   };
 
@@ -176,12 +169,11 @@ function Header() {
         </Toolbar>
       </AppBar>
 
-      {showLogin && (
-        <Login onClose={closeModals} switchToRegister={switchToRegister} />
-      )}
-      {showRegister && (
-        <Register onClose={closeModals} switchToLogin={switchToLogin} />
-      )}
+      <AuthModal
+        open={showAuth}
+        onClose={closeModals}
+        initialMode={authMode}
+      />
 
       <Dialog
         open={showLogoutConfirm}
