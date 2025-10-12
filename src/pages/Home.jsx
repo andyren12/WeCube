@@ -1,6 +1,6 @@
 function Home() {
   return (
-    <div className="page-content">
+    <div>
       <h1>Home</h1>
     </div>
   );

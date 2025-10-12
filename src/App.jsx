@@ -16,50 +16,50 @@ function App() {
     <ThemeProvider theme={theme}>
       <AuthProvider>
         <Router>
+          <Header />
           <Box
+            component="main"
             sx={{
-              display: "flex",
-              flexDirection: "column",
-              minHeight: "100vh",
+              pt: 8,
+              display: 'flex',
+              justifyContent: 'center',
+              width: '100vw'
             }}
           >
-            <Header />
-            <Box component="main" sx={{ flexGrow: 1, pt: 8 }}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/browse" element={<Browse />} />
-                <Route path="/competitions" element={<Competitions />} />
-                <Route path="/sell" element={<Sell />} />
-                <Route
-                  path="/my-listings"
-                  element={
-                    <Box sx={{ p: 3 }}>
-                      <h1>My Listings</h1>
-                      <p>Coming soon...</p>
-                    </Box>
-                  }
-                />
-                <Route
-                  path="/my-purchases"
-                  element={
-                    <Box sx={{ p: 3 }}>
-                      <h1>My Purchases</h1>
-                      <p>Coming soon...</p>
-                    </Box>
-                  }
-                />
-                <Route
-                  path="/settings"
-                  element={
-                    <Box sx={{ p: 3 }}>
-                      <h1>Settings</h1>
-                      <p>Coming soon...</p>
-                    </Box>
-                  }
-                />
-              </Routes>
-            </Box>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/browse" element={<Browse />} />
+              <Route path="/competitions" element={<Competitions />} />
+              <Route path="/sell" element={<Sell />} />
+              <Route
+                path="/my-listings"
+                element={
+                  <div>
+                    <h1>My Listings</h1>
+                    <p>Coming soon...</p>
+                  </div>
+                }
+              />
+              <Route
+                path="/my-purchases"
+                element={
+                  <div>
+                    <h1>My Purchases</h1>
+                    <p>Coming soon...</p>
+                  </div>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <div>
+                    <h1>Settings</h1>
+                    <p>Coming soon...</p>
+                  </div>
+                }
+              />
+            </Routes>
           </Box>
         </Router>
       </AuthProvider>

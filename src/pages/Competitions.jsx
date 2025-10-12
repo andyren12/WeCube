@@ -1,6 +1,6 @@
 function Competitions() {
   return (
-    <div className="page-content">
+    <div>
       <h1>Competitions</h1>
     </div>
   );

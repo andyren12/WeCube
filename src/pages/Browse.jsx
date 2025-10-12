@@ -1,6 +1,6 @@
 function Browse() {
   return (
-    <div className="page-content">
+    <div>
       <h1>Browse</h1>
     </div>
   );
