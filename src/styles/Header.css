@@ -1,0 +1,40 @@
+/* Header and Account Styles */
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  border-bottom: 1px solid lightgray;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 10rem;
+  padding-right: 10rem;
+}
+
+.navbar img {
+  height: 2.5rem;
+}
+
+.account-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.account-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.account-icon {
+  font-size: 1.2rem;
+}
