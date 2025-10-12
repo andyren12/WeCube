@@ -170,7 +170,7 @@ function Sell() {
         handleClearListing();
         setShowSuccess(false);
         setAnimationPhase(0);
-      }, 3000);
+      }, 2000);
     } catch (error) {
       console.error("Error saving listing:", error);
 

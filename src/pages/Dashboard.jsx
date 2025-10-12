@@ -1,7 +1,6 @@
 import {
   Box,
   Typography,
-  Grid,
   Card,
   CardContent,
   Paper,
@@ -20,6 +19,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import {
   TrendingUp,
@@ -28,6 +32,7 @@ import {
   ShoppingCart,
   Edit,
   Delete,
+  MoreVert,
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -59,6 +64,8 @@ function Dashboard() {
     listing: null,
   });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [selectedListing, setSelectedListing] = useState(null);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -197,6 +204,30 @@ function Dashboard() {
     }
   };
 
+  const handleMenuOpen = (event, listing) => {
+    setMenuAnchor(event.currentTarget);
+    setSelectedListing(listing);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+    setSelectedListing(null);
+  };
+
+  const handleEditClick = () => {
+    if (selectedListing) {
+      navigate(`/listing/${selectedListing.id}`);
+    }
+    handleMenuClose();
+  };
+
+  const handleDeleteMenuClick = () => {
+    if (selectedListing) {
+      handleDeleteClick(selectedListing);
+    }
+    handleMenuClose();
+  };
+
   if (loading) {
     return (
       <Box sx={{ width: "60vw", mx: "auto", p: 3, mt: 2 }}>
@@ -332,7 +363,7 @@ function Dashboard() {
                     <TableCell>Condition</TableCell>
                     <TableCell>Date Listed</TableCell>
                     <TableCell>Status</TableCell>
-                    <TableCell>Actions</TableCell>
+                    <TableCell sx={{ width: 50 }}></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody sx={{ minHeight: 200 }}>
@@ -379,23 +410,12 @@ function Dashboard() {
                         />
                       </TableCell>
                       <TableCell>
-                        <Stack direction="row" spacing={1}>
-                          <Button
-                            size="small"
-                            startIcon={<Edit />}
-                            onClick={() => navigate(`/listing/${listing.id}`)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            size="small"
-                            color="error"
-                            startIcon={<Delete />}
-                            onClick={() => handleDeleteClick(listing)}
-                          >
-                            Delete
-                          </Button>
-                        </Stack>
+                        <IconButton
+                          onClick={(e) => handleMenuOpen(e, listing)}
+                          size="small"
+                        >
+                          <MoreVert />
+                        </IconButton>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -465,6 +485,28 @@ function Dashboard() {
           </Paper>
         </Box>
       </Box>
+
+      {/* Actions Menu */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      >
+        <MenuItem onClick={handleEditClick}>
+          <ListItemIcon>
+            <Edit fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Edit</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDeleteMenuClick}>
+          <ListItemIcon>
+            <Delete fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Delete</ListItemText>
+        </MenuItem>
+      </Menu>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
