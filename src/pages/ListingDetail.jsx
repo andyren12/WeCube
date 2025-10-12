@@ -222,7 +222,7 @@ function ListingDetail() {
         <Button onClick={() => navigate(-1)} variant="outlined">
           ← Back
         </Button>
-        {isOwner && (
+        {isOwner ? (
           <Button
             variant="contained"
             startIcon={<Edit />}
@@ -230,6 +230,13 @@ function ListingDetail() {
           >
             Edit Listing
           </Button>
+        ) : (
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button variant="outlined" color="info">
+              Message Owner
+            </Button>
+            <Button variant="contained">Purchase</Button>
+          </Box>
         )}
       </Box>
 
