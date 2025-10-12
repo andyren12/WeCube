@@ -350,7 +350,7 @@ function Dashboard() {
               <Typography variant="h5" fontWeight="bold">
                 My Listings
               </Typography>
-              <Button variant="contained" href="/sell">
+              <Button variant="outlined" href="/sell">
                 Create New Listing
               </Button>
             </Box>
