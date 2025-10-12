@@ -12,7 +12,6 @@ import {
   InputAdornment,
   Alert,
   Grid,
-  Fade,
   Collapse,
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
@@ -83,10 +82,12 @@ export function AuthModal({ open, onClose, initialMode = "login" }) {
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          transition: "height 0.3s ease-in-out",
-          overflow: "visible",
+      slotProps={{
+        paper: {
+          sx: {
+            transition: "height 0.3s ease-in-out",
+            overflow: "visible",
+          },
         },
       }}
     >
@@ -165,17 +166,19 @@ export function AuthModal({ open, onClose, initialMode = "login" }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            InputProps={{
-              endAdornment: password.length > 0 && (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                  >
-                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                endAdornment: password.length > 0 && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
             }}
           />
         </DialogContent>
