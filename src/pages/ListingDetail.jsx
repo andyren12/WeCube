@@ -291,8 +291,8 @@ function ListingDetail() {
                 color={getConditionColor(listing.condition)}
               />
               <Chip
-                label={listing.sold ? "Sold" : "Available"}
-                color={listing.sold ? "default" : "success"}
+                label={listing.status === "sold" ? "Sold" : "Available"}
+                color={listing.status === "sold" ? "default" : "success"}
               />
             </Stack>
 

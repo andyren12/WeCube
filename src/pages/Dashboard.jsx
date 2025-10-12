@@ -92,29 +92,27 @@ function Dashboard() {
       console.log(listings);
 
       const totalListings = listings.length;
-      const activeListings = listings.filter((listing) => !listing.sold).length;
+      const activeListings = listings.filter(
+        (listing) => listing.status === "active"
+      ).length;
+      const soldListings = listings.filter(
+        (listing) => listing.status === "sold"
+      ).length;
 
-      const mockSales = [
-        {
-          id: 1,
-          title: "Gan 356 X 3x3",
-          price: 45.99,
-          soldDate: new Date("2024-10-01"),
-          buyer: "john_doe",
-        },
-        {
-          id: 2,
-          title: "MoYu WeiLong WR M",
-          price: 32.5,
-          soldDate: new Date("2024-10-05"),
-          buyer: "speedcuber123",
-        },
-      ];
+      const soldListingsData = listings.filter(
+        (listing) => listing.status === "sold"
+      );
+      const sales = soldListingsData.map((listing) => ({
+        id: listing.id,
+        title: listing.title,
+        price: listing.price,
+        soldDate: listing.soldAt || listing.updatedAt || listing.createdAt,
+        buyer: listing.soldTo || "Unknown",
+      }));
 
-      const totalSales = mockSales.length;
-
-      const totalEarnings = mockSales.reduce(
-        (sum, sale) => sum + sale.price,
+      const totalSales = soldListings.length || 0;
+      const totalEarnings = soldListingsData.reduce(
+        (sum, listing) => sum + listing.price,
         0
       );
 
@@ -125,7 +123,7 @@ function Dashboard() {
         totalEarnings,
       });
 
-      setPastSales(mockSales);
+      setPastSales(sales);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -189,9 +187,12 @@ function Dashboard() {
       setStats((prev) => ({
         ...prev,
         totalListings: prev.totalListings - 1,
-        activeListings: listing.sold
-          ? prev.activeListings
-          : prev.activeListings - 1,
+        activeListings:
+          listing.status === "active"
+            ? prev.activeListings - 1
+            : prev.activeListings,
+        totalSales:
+          listing.status === "sold" ? prev.totalSales - 1 : prev.totalSales,
       }));
 
       console.log("Listing deleted successfully:", listing.id);
@@ -404,8 +405,10 @@ function Dashboard() {
                       <TableCell>{formatDate(listing.createdAt)}</TableCell>
                       <TableCell>
                         <Chip
-                          label={listing.sold ? "Sold" : "Active"}
-                          color={listing.sold ? "default" : "success"}
+                          label={listing.status === "sold" ? "Sold" : "Active"}
+                          color={
+                            listing.status === "sold" ? "default" : "success"
+                          }
                           size="small"
                         />
                       </TableCell>

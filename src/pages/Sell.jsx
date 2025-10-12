@@ -155,7 +155,10 @@ function Sell() {
         condition: listingData.condition,
         photos: photosForStorage,
         deliveryOptions,
+        status: "active", // New listings start as active
         createdAt: new Date(),
+        soldAt: null,
+        soldTo: null,
         userId: currentUser.uid,
         listingId, // Store our custom ID for reference
       };
