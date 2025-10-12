@@ -4,7 +4,7 @@
   top: 0;
   left: 0;
   right: 0;
-  padding: 1rem;
+  padding: 0.5rem;
   border-bottom: 1px solid lightgray;
 }
 
@@ -20,7 +20,12 @@
   height: 2.5rem;
 }
 
-.account-btn {
+.navgroup {
+  display: flex;
+  align-items: center;
+}
+
+.icon-buttons {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -31,10 +36,6 @@
   transition: all 0.2s;
 }
 
-.account-btn:hover {
+.icon-buttons:hover {
   background: rgba(0, 0, 0, 0.05);
-}
-
-.account-icon {
-  font-size: 1.2rem;
 }
