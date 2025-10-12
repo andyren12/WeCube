@@ -13,7 +13,6 @@ import {
   TableRow,
   Chip,
   Button,
-  Avatar,
   Stack,
   Divider,
 } from "@mui/material";
@@ -24,7 +23,6 @@ import {
   ShoppingCart,
   Edit,
   Delete,
-  Visibility,
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
@@ -35,7 +33,7 @@ function Dashboard() {
   const [stats, setStats] = useState({
     totalListings: 0,
     activeListings: 0,
-    salesThisMonth: 0,
+    totalSales: 0,
     totalEarnings: 0,
   });
   const [userListings, setUserListings] = useState([]);
@@ -68,7 +66,6 @@ function Dashboard() {
       const totalListings = listings.length;
       const activeListings = listings.filter((listing) => !listing.sold).length;
 
-      // For now, mock sales data since we don't have a sales collection yet
       const mockSales = [
         {
           id: 1,
@@ -86,15 +83,7 @@ function Dashboard() {
         },
       ];
 
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      const salesThisMonth = mockSales.filter((sale) => {
-        const saleDate = new Date(sale.soldDate);
-        return (
-          saleDate.getMonth() === currentMonth &&
-          saleDate.getFullYear() === currentYear
-        );
-      }).length;
+      const totalSales = mockSales.length;
 
       const totalEarnings = mockSales.reduce(
         (sum, sale) => sum + sale.price,
@@ -104,7 +93,7 @@ function Dashboard() {
       setStats({
         totalListings,
         activeListings,
-        salesThisMonth,
+        totalSales,
         totalEarnings,
       });
 
@@ -158,88 +147,95 @@ function Dashboard() {
         Manage your listings and track your sales performance
       </Typography>
 
-      {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Avatar sx={{ bgcolor: "primary.main" }}>
-                  <Inventory />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" fontWeight="bold">
-                    {stats.totalListings}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total Listings
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+      <Box sx={{ display: "flex", gap: 3, mb: 4, flexWrap: "wrap" }}>
+        <Card sx={{ flex: "1 1 200px", minWidth: 200 }}>
+          <CardContent>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: 1,
+                p: 2,
+              }}
+            >
+              <Inventory sx={{ fontSize: 24 }} />
+              <Typography variant="h5" fontWeight="bold">
+                {stats.totalListings}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Listings
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
 
-        <Grid>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Avatar sx={{ bgcolor: "success.main" }}>
-                  <TrendingUp />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" fontWeight="bold">
-                    {stats.activeListings}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Active Listings
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card sx={{ flex: "1 1 200px", minWidth: 200 }}>
+          <CardContent>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: 1,
+                p: 2,
+              }}
+            >
+              <TrendingUp sx={{ fontSize: 24 }} />
+              <Typography variant="h5" fontWeight="bold">
+                {stats.activeListings}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Active Listings
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
 
-        <Grid>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Avatar sx={{ bgcolor: "info.main" }}>
-                  <ShoppingCart />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" fontWeight="bold">
-                    {stats.salesThisMonth}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Sales This Month
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card sx={{ flex: "1 1 200px", minWidth: 200 }}>
+          <CardContent>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: 1,
+                p: 2,
+              }}
+            >
+              <ShoppingCart sx={{ fontSize: 24 }} />
+              <Typography variant="h5" fontWeight="bold">
+                {stats.totalSales}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Sales
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
 
-        <Grid>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Avatar sx={{ bgcolor: "warning.main" }}>
-                  <AttachMoney />
-                </Avatar>
-                <Box>
-                  <Typography variant="h4" fontWeight="bold">
-                    {formatPrice(stats.totalEarnings)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total Earnings
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+        <Card sx={{ flex: "1 1 200px", minWidth: 200 }}>
+          <CardContent>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: 1,
+                p: 2,
+              }}
+            >
+              <AttachMoney sx={{ fontSize: 24 }} />
+              <Typography variant="h5" fontWeight="bold">
+                {formatPrice(stats.totalEarnings)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Earnings
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
 
       <Grid container spacing={3}>
         <Grid>
@@ -279,14 +275,16 @@ function Dashboard() {
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 2 }}
                         >
-                          {listing.photos && listing.photos[0] && (
-                            <Avatar
-                              variant="rounded"
-                              sx={{ width: 40, height: 40 }}
-                              src={`https://wecube.s3.amazonaws.com/${listing.photos[0].s3Key}`}
-                            />
-                          )}
-                          <Typography variant="body2">
+                          <Typography
+                            variant="body2"
+                            title={listing.title}
+                            sx={{
+                              maxWidth: 200,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {listing.title}
                           </Typography>
                         </Box>
@@ -309,9 +307,6 @@ function Dashboard() {
                       </TableCell>
                       <TableCell>
                         <Stack direction="row" spacing={1}>
-                          <Button size="small" startIcon={<Visibility />}>
-                            View
-                          </Button>
                           <Button size="small" startIcon={<Edit />}>
                             Edit
                           </Button>
@@ -342,7 +337,7 @@ function Dashboard() {
         </Grid>
 
         {/* Past Sales Section */}
-        <Grid item xs={12} lg={4}>
+        <Grid>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
               Recent Sales
