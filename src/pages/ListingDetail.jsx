@@ -200,8 +200,8 @@ function ListingDetail() {
     return (
       <Box sx={{ width: "80vw", mx: "auto", p: 3, mt: 2 }}>
         <Typography variant="h4">Listing not found</Typography>
-        <Button onClick={() => navigate("/dashboard")} sx={{ mt: 2 }}>
-          Back to Dashboard
+        <Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>
+          Back
         </Button>
       </Box>
     );
@@ -219,8 +219,8 @@ function ListingDetail() {
           mb: 3,
         }}
       >
-        <Button onClick={() => navigate("/dashboard")} variant="outlined">
-          ← Back to Dashboard
+        <Button onClick={() => navigate(-1)} variant="outlined">
+          ← Back
         </Button>
         {isOwner && (
           <Button
