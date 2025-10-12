@@ -15,6 +15,11 @@ import {
   Button,
   Stack,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import {
   TrendingUp,
@@ -26,9 +31,18 @@ import {
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
+  doc,
+  deleteDoc,
+} from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../contexts/AuthContext";
+import { deleteMultipleImages } from "../utils/s3";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -40,6 +54,11 @@ function Dashboard() {
   const [userListings, setUserListings] = useState([]);
   const [pastSales, setPastSales] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    listing: null,
+  });
+  const [isDeleting, setIsDeleting] = useState(false);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -130,6 +149,52 @@ function Dashboard() {
       used: "default",
     };
     return colors[condition] || "default";
+  };
+
+  const handleDeleteClick = (listing) => {
+    setDeleteDialog({ open: true, listing });
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog({ open: false, listing: null });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.listing) return;
+
+    setIsDeleting(true);
+    try {
+      const listing = deleteDialog.listing;
+
+      // Step 1: Delete images from S3
+      if (listing.photos && listing.photos.length > 0) {
+        const s3Keys = listing.photos.map((photo) => photo.s3Key);
+        await deleteMultipleImages(s3Keys);
+      }
+
+      // Step 2: Delete listing from Firestore
+      await deleteDoc(doc(db, "listings", listing.id));
+
+      // Step 3: Update local state
+      setUserListings((prev) => prev.filter((l) => l.id !== listing.id));
+
+      // Update stats
+      setStats((prev) => ({
+        ...prev,
+        totalListings: prev.totalListings - 1,
+        activeListings: listing.sold
+          ? prev.activeListings
+          : prev.activeListings - 1,
+      }));
+
+      console.log("Listing deleted successfully:", listing.id);
+      setDeleteDialog({ open: false, listing: null });
+    } catch (error) {
+      console.error("Error deleting listing:", error);
+      alert(`Failed to delete listing: ${error.message}`);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (loading) {
@@ -239,8 +304,8 @@ function Dashboard() {
         </Card>
       </Box>
 
-      <Grid container spacing={3}>
-        <Grid>
+      <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+        <Box sx={{ flex: "2 1 400px", minWidth: 400 }}>
           <Paper sx={{ p: 3 }}>
             <Box
               sx={{
@@ -262,7 +327,7 @@ function Dashboard() {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Item</TableCell>
+                    <TableCell sx={{ width: 300 }}>Item</TableCell>
                     <TableCell>Price</TableCell>
                     <TableCell>Condition</TableCell>
                     <TableCell>Date Listed</TableCell>
@@ -270,7 +335,7 @@ function Dashboard() {
                     <TableCell>Actions</TableCell>
                   </TableRow>
                 </TableHead>
-                <TableBody>
+                <TableBody sx={{ minHeight: 200 }}>
                   {userListings.map((listing) => (
                     <TableRow key={listing.id}>
                       <TableCell>
@@ -326,6 +391,7 @@ function Dashboard() {
                             size="small"
                             color="error"
                             startIcon={<Delete />}
+                            onClick={() => handleDeleteClick(listing)}
                           >
                             Delete
                           </Button>
@@ -346,10 +412,10 @@ function Dashboard() {
               </Table>
             </TableContainer>
           </Paper>
-        </Grid>
+        </Box>
 
         {/* Past Sales Section */}
-        <Grid>
+        <Box sx={{ flex: "1 1 300px", minWidth: 300 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
               Recent Sales
@@ -365,7 +431,7 @@ function Dashboard() {
                       alignItems: "center",
                     }}
                   >
-                    <Box>
+                    <Box sx={{ flex: 1 }}>
                       <Typography variant="body1" fontWeight="medium">
                         {sale.title}
                       </Typography>
@@ -380,6 +446,7 @@ function Dashboard() {
                       variant="h6"
                       color="success.main"
                       fontWeight="bold"
+                      sx={{ flexShrink: 0 }}
                     >
                       {formatPrice(sale.price)}
                     </Typography>
@@ -396,8 +463,39 @@ function Dashboard() {
               )}
             </Stack>
           </Paper>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={handleDeleteCancel}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Delete Listing</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Are you sure you want to delete "{deleteDialog.listing?.title}"?
+            This action cannot be undone and will permanently remove the listing
+            and all associated images.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            variant="contained"
+            disabled={isDeleting}
+            startIcon={<Delete />}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

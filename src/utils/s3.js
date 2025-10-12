@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 // Initialize S3 client
 const s3Client = new S3Client({
@@ -87,6 +87,51 @@ export async function uploadMultipleImages(files, listingId) {
     return s3Keys;
   } catch (error) {
     console.error('Error uploading multiple files:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a single image from S3 bucket
+ * @param {string} s3Key - The S3 key (path) of the file to delete
+ * @returns {Promise<void>}
+ */
+export async function deleteImageFromS3(s3Key) {
+  const deleteParams = {
+    Bucket: import.meta.env.VITE_S3_BUCKET_NAME,
+    Key: s3Key,
+  };
+
+  try {
+    console.log('Deleting file from S3:', s3Key);
+
+    const command = new DeleteObjectCommand(deleteParams);
+    await s3Client.send(command);
+
+    console.log(`File deleted successfully: ${s3Key}`);
+  } catch (error) {
+    console.error('Detailed S3 delete error:', {
+      error,
+      errorMessage: error.message,
+      s3Key
+    });
+    throw new Error(`Failed to delete ${s3Key}: ${error.message}`);
+  }
+}
+
+/**
+ * Delete multiple images from S3
+ * @param {Array<string>} s3Keys - Array of S3 keys to delete
+ * @returns {Promise<void>}
+ */
+export async function deleteMultipleImages(s3Keys) {
+  const deletePromises = s3Keys.map(s3Key => deleteImageFromS3(s3Key));
+
+  try {
+    await Promise.all(deletePromises);
+    console.log(`Successfully deleted ${s3Keys.length} files from S3`);
+  } catch (error) {
+    console.error('Error deleting multiple files from S3:', error);
     throw error;
   }
 }
