@@ -232,7 +232,7 @@ function Sell() {
 
             <Grid container spacing={2}>
               {selectedPhotos.map((photo, index) => (
-                <Grid item xs={6} sm={4} md={2.4} key={photo.id}>
+                <Grid key={photo.id}>
                   <Box
                     sx={{
                       position: "relative",
@@ -342,7 +342,7 @@ function Sell() {
               />
 
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid>
                   <TextField
                     label="Price (USD)"
                     fullWidth
@@ -358,7 +358,7 @@ function Sell() {
                     required
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid>
                   <FormControl fullWidth variant="outlined" required>
                     <InputLabel id="condition-label">Condition</InputLabel>
                     <Select
