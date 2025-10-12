@@ -1,8 +1,22 @@
 import { useState } from "react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  IconButton,
+  InputAdornment,
+  Alert,
+  Grid,
+} from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import "../styles/Auth.css";
+import CloseIcon from "@mui/icons-material/Close";
 
 export function Register({ onClose, switchToLogin }) {
   const [firstName, setFirstName] = useState("");
@@ -31,71 +45,119 @@ export function Register({ onClose, switchToLogin }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2>Sign Up</h2>
-        {error && <div className="error">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label>First Name:</label>
-            <input
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label>Last Name:</label>
-            <input
-              type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label>Email:</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label>Password:</label>
-            <div className="password-input-container">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+    <Dialog open={true} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ position: 'relative', pb: 1 }}>
+        <Typography variant="h5" component="div">
+          Sign Up
+        </Typography>
+        <IconButton
+          onClick={onClose}
+          sx={{ position: 'absolute', right: 8, top: 8 }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <form onSubmit={handleSubmit}>
+        <DialogContent sx={{ pt: 2 }}>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                autoFocus
+                margin="normal"
+                label="First Name"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 required
+                sx={{ mt: 0 }}
               />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                margin="normal"
+                label="Last Name"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                sx={{ mt: 0 }}
+              />
+            </Grid>
+          </Grid>
+
+          <TextField
+            margin="normal"
+            label="Email"
+            type="email"
+            fullWidth
+            variant="outlined"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            sx={{ mb: 2 }}
+          />
+
+          <TextField
+            margin="normal"
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            fullWidth
+            variant="outlined"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            InputProps={{
+              endAdornment: password.length > 0 && (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 3, pt: 2, flexDirection: 'column', gap: 2 }}>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            size="large"
+            disabled={loading}
+          >
+            {loading ? 'Creating Account...' : 'Sign Up'}
+          </Button>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Already have an account?{' '}
+              <Button
+                variant="text"
+                size="small"
+                onClick={switchToLogin}
+                sx={{ textTransform: 'none' }}
               >
-                {password.length > 0 &&
-                  (showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />)}
-              </button>
-            </div>
-          </div>
-          <button disabled={loading} type="submit">
-            Sign Up
-          </button>
-        </form>
-        <p>
-          Already have an account?{" "}
-          <button type="button" onClick={switchToLogin}>
-            Log In
-          </button>
-        </p>
-        <button className="close-btn" onClick={onClose}>
-          ×
-        </button>
-      </div>
-    </div>
+                Log In
+              </Button>
+            </Typography>
+          </Box>
+        </DialogActions>
+      </form>
+    </Dialog>
   );
 }

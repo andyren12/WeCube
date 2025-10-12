@@ -1,8 +1,21 @@
 import { useState } from "react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  IconButton,
+  InputAdornment,
+  Alert,
+} from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import "../styles/Auth.css";
+import CloseIcon from "@mui/icons-material/Close";
 
 export function Login({ onClose, switchToRegister }) {
   const [email, setEmail] = useState("");
@@ -28,53 +41,90 @@ export function Login({ onClose, switchToRegister }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2>Log In</h2>
-        {error && <div className="error">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label>Email:</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label>Password:</label>
-            <div className="password-input-container">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
+    <Dialog open={true} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ position: 'relative', pb: 1 }}>
+        <Typography variant="h5" component="div">
+          Log In
+        </Typography>
+        <IconButton
+          onClick={onClose}
+          sx={{ position: 'absolute', right: 8, top: 8 }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <form onSubmit={handleSubmit}>
+        <DialogContent sx={{ pt: 2 }}>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          <TextField
+            autoFocus
+            margin="normal"
+            label="Email"
+            type="email"
+            fullWidth
+            variant="outlined"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            sx={{ mb: 2 }}
+          />
+
+          <TextField
+            margin="normal"
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            fullWidth
+            variant="outlined"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            InputProps={{
+              endAdornment: password.length > 0 && (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 3, pt: 2, flexDirection: 'column', gap: 2 }}>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            size="large"
+            disabled={loading}
+          >
+            {loading ? 'Logging in...' : 'Log In'}
+          </Button>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Need an account?{' '}
+              <Button
+                variant="text"
+                size="small"
+                onClick={switchToRegister}
+                sx={{ textTransform: 'none' }}
               >
-                {password.length > 0 &&
-                  (showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />)}
-              </button>
-            </div>
-          </div>
-          <button disabled={loading} type="submit">
-            Log In
-          </button>
-        </form>
-        <p>
-          Need an account?{" "}
-          <button type="button" onClick={switchToRegister}>
-            Sign Up
-          </button>
-        </p>
-        <button className="close-btn" onClick={onClose}>
-          ×
-        </button>
-      </div>
-    </div>
+                Sign Up
+              </Button>
+            </Typography>
+          </Box>
+        </DialogActions>
+      </form>
+    </Dialog>
   );
 }
