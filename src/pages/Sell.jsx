@@ -17,6 +17,9 @@ import {
   FormHelperText,
   Fade,
   Grow,
+  Autocomplete,
+  Chip,
+  Skeleton,
 } from "@mui/material";
 import { Upload, Close, Check } from "@mui/icons-material";
 import { useState, useEffect } from "react";
@@ -26,12 +29,13 @@ import { useAuth } from "../contexts/AuthContext";
 import { uploadMultipleImages } from "../utils/s3";
 import { getConnectAccountStatus } from "../utils/stripe";
 import SellerOnboarding from "../components/SellerOnboarding";
+import { getUpcomingCompetitions, searchCompetitions } from "../utils/wcaApi";
 
 function Sell() {
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [deliveryOptions, setDeliveryOptions] = useState({
     shipping: true,
-    meetup: true,
+    meetup: false,
   });
   const [listingData, setListingData] = useState({
     title: "",
@@ -45,6 +49,9 @@ function Sell() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [sellerOnboardingComplete, setSellerOnboardingComplete] = useState(false);
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const [competitions, setCompetitions] = useState([]);
+  const [selectedCompetitions, setSelectedCompetitions] = useState([]);
+  const [loadingCompetitions, setLoadingCompetitions] = useState(false);
   const { currentUser } = useAuth();
 
   // Check seller onboarding status
@@ -166,10 +173,60 @@ function Sell() {
   };
 
   const handleDeliveryChange = (option) => (event) => {
+    const isChecked = event.target.checked;
+
     setDeliveryOptions((prev) => ({
       ...prev,
-      [option]: event.target.checked,
+      [option]: isChecked,
     }));
+
+    // Load competitions when meetup is selected
+    if (option === 'meetup' && isChecked) {
+      console.log('Meetup option selected, loading competitions');
+      loadCompetitions(); // Always load competitions when meetup is enabled
+    }
+
+    // Clear selected competitions when meetup is deselected
+    if (option === 'meetup' && !isChecked) {
+      setSelectedCompetitions([]);
+      setCompetitions([]); // Also clear the competitions list
+    }
+  };
+
+  const loadCompetitions = async () => {
+    setLoadingCompetitions(true);
+    try {
+      const upcomingCompetitions = await getUpcomingCompetitions(100);
+      setCompetitions(upcomingCompetitions);
+      console.log('Successfully loaded competitions:', upcomingCompetitions.length);
+    } catch (error) {
+      console.error('Error loading competitions:', error);
+      // Don't throw the error, just log it so the search can still work
+      setCompetitions([]);
+    } finally {
+      setLoadingCompetitions(false);
+    }
+  };
+
+  const handleCompetitionSearch = async (_, value) => {
+    console.log('Competition search triggered with value:', value);
+
+    // Only search if user types something significant
+    if (typeof value === 'string' && value.length > 2) {
+      setLoadingCompetitions(true);
+      try {
+        console.log('Searching for competitions with query:', value);
+        const searchResults = await searchCompetitions(value, 50);
+        console.log('Search results:', searchResults.length, 'competitions found');
+        setCompetitions(searchResults);
+      } catch (error) {
+        console.error('Error searching competitions:', error);
+        // Keep existing competitions if search fails
+      } finally {
+        setLoadingCompetitions(false);
+      }
+    }
+    // Don't reload competitions when search is cleared - let filterOptions handle it
   };
 
   const isDeliveryValid = deliveryOptions.shipping || deliveryOptions.meetup;
@@ -236,6 +293,16 @@ function Sell() {
         condition: listingData.condition,
         photos: photosForStorage,
         deliveryOptions,
+        competitions: selectedCompetitions.map(comp => ({
+          id: comp.id,
+          name: comp.name,
+          city: comp.city,
+          country: comp.country,
+          startDate: comp.startDate,
+          endDate: comp.endDate,
+          displayName: comp.displayName,
+          dateRange: comp.dateRange
+        })),
         status: "active", // New listings start as active
         createdAt: new Date(),
         soldAt: null,
@@ -283,8 +350,9 @@ function Sell() {
     });
     setDeliveryOptions({
       shipping: true,
-      meetup: true,
+      meetup: false,
     });
+    setSelectedCompetitions([]);
   };
 
   if (!currentUser) {
@@ -590,6 +658,73 @@ function Sell() {
                   />
                 </Box>
               </FormGroup>
+
+              {/* Competition Selection */}
+              {deliveryOptions.meetup && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Select competitions where this cube will be available for meetup:
+                  </Typography>
+                  {loadingCompetitions ? (
+                    <Skeleton variant="rectangular" width="100%" height={56} />
+                  ) : (
+                    <Autocomplete
+                      multiple
+                      options={competitions}
+                      getOptionLabel={(option) => option.displayName}
+                      value={selectedCompetitions}
+                      onChange={(_, newValue) => {
+                        setSelectedCompetitions(newValue);
+                      }}
+                      onInputChange={handleCompetitionSearch}
+                      noOptionsText={competitions.length === 0 ? 'No competitions loaded. Try typing to search.' : 'No competitions match your search.'}
+                      loading={loadingCompetitions}
+                      loadingText="Loading competitions..."
+                      filterOptions={(options, { inputValue }) => {
+                        // Show all options if no input, or filter by input
+                        if (!inputValue) return options;
+                        return options.filter(option =>
+                          option.name.toLowerCase().includes(inputValue.toLowerCase()) ||
+                          option.city.toLowerCase().includes(inputValue.toLowerCase()) ||
+                          option.country.toLowerCase().includes(inputValue.toLowerCase())
+                        );
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Search competitions"
+                          placeholder="Type to search competitions..."
+                          variant="outlined"
+                        />
+                      )}
+                      renderTags={(tagValue, getTagProps) =>
+                        tagValue.map((option, index) => (
+                          <Chip
+                            {...getTagProps({ index })}
+                            key={option.id}
+                            label={`${option.name} - ${option.dateRange}`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ))
+                      }
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props} key={option.id}>
+                          <Box>
+                            <Typography variant="body1">
+                              {option.name}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {option.city}, {option.country} • {option.dateRange}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
+                    />
+                  )}
+                </Box>
+              )}
+
               {!isDeliveryValid && (
                 <FormHelperText>
                   Please select at least one delivery option
