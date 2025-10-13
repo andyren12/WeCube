@@ -38,6 +38,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { createConversationRequest, getExistingConversation } from "../utils/messaging";
+import PaymentModal from "../components/PaymentModal";
 
 function ListingDetail() {
   const { id } = useParams();
@@ -50,6 +51,7 @@ function ListingDetail() {
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [editData, setEditData] = useState({
     title: "",
     price: "",
@@ -88,7 +90,17 @@ function ListingDetail() {
 
       if (docSnap.exists()) {
         const listingData = { id: docSnap.id, ...docSnap.data() };
-        setListing(listingData);
+
+        // Fetch seller's Stripe account ID
+        const sellerDoc = await getDoc(doc(db, "users", listingData.userId));
+        const sellerData = sellerDoc.data();
+
+        setListing({
+          ...listingData,
+          stripeAccountId: sellerData?.stripeAccountId,
+          sellerName: `${sellerData?.firstName || ''} ${sellerData?.lastName || ''}`.trim() || 'Seller'
+        });
+
         setEditData({
           title: listingData.title,
           price: listingData.price.toString(),
@@ -232,6 +244,60 @@ function ListingDetail() {
     setShowMessageDialog(true);
   };
 
+  const handlePurchaseClick = () => {
+    if (!currentUser) {
+      alert("Please sign in to make a purchase");
+      return;
+    }
+
+    if (currentUser.uid === listing.userId) {
+      alert("You cannot purchase your own listing");
+      return;
+    }
+
+    if (listing.status === "sold") {
+      alert("This item has already been sold");
+      return;
+    }
+
+    if (!listing.stripeAccountId) {
+      alert("This seller has not completed their payment setup. The item cannot be purchased at this time.");
+      return;
+    }
+
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = async (paymentResult, paymentIntent) => {
+    try {
+      // Update listing status to sold
+      const docRef = doc(db, "listings", id);
+      await updateDoc(docRef, {
+        status: "sold",
+        soldAt: new Date(),
+        buyerId: currentUser.uid,
+        paymentIntentId: paymentIntent.id,
+      });
+
+      // Update local state
+      setListing((prev) => ({
+        ...prev,
+        status: "sold",
+        soldAt: new Date(),
+        buyerId: currentUser.uid,
+      }));
+
+      setShowPaymentModal(false);
+
+      // Optional: Navigate to a success page or show success message
+      alert("Purchase completed successfully! You will receive confirmation details shortly.");
+
+    } catch (error) {
+      console.error("Error updating listing after payment:", error);
+      alert("Payment successful, but there was an issue updating the listing. Please contact support.");
+    }
+  };
+
   const getMessageButtonText = () => {
     if (!existingConversation) return "Message Owner";
 
@@ -332,7 +398,14 @@ function ListingDetail() {
             >
               {getMessageButtonText()}
             </Button>
-            <Button variant="contained" color="success">Purchase</Button>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={handlePurchaseClick}
+              disabled={listing.status === "sold"}
+            >
+              {listing.status === "sold" ? "Sold" : "Purchase"}
+            </Button>
           </Box>
         )}
       </Box>
@@ -619,6 +692,17 @@ function ListingDetail() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Payment Modal */}
+      {currentUser && listing && (
+        <PaymentModal
+          open={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          listing={listing}
+          buyerInfo={currentUser}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
     </Box>
   );
 }
