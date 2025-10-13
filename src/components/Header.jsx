@@ -15,9 +15,11 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Badge,
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
 import { AuthModal } from "./AuthModal";
+import { getPendingRequests } from "../utils/messaging";
 import logo from "../assets/wecube-logo.png";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
@@ -27,10 +29,30 @@ function Header() {
   const [authMode, setAuthMode] = useState("login");
   const [anchorEl, setAnchorEl] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
 
   const isMenuOpen = Boolean(anchorEl);
+
+  // Load pending message requests count
+  useEffect(() => {
+    if (currentUser) {
+      loadPendingCount();
+      // Set up periodic refresh every 30 seconds
+      const interval = setInterval(loadPendingCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [currentUser]);
+
+  const loadPendingCount = async () => {
+    try {
+      const pending = await getPendingRequests(currentUser.uid);
+      setPendingCount(pending.length);
+    } catch (error) {
+      console.error("Error loading pending requests:", error);
+    }
+  };
 
   const openAuth = (mode = "login") => {
     setAuthMode(mode);
@@ -114,8 +136,25 @@ function Header() {
           <Box sx={{ flexGrow: 1 }} />
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <IconButton color="inherit">
-              <ChatBubbleOutlineIcon fontSize="small" />
+            <IconButton
+              color="inherit"
+              component={Link}
+              to="/messages"
+              sx={{ position: "relative" }}
+            >
+              <Badge
+                badgeContent={pendingCount}
+                color="error"
+                overlap="circular"
+                sx={{
+                  "& .MuiBadge-badge": {
+                    right: 3,
+                    top: 3,
+                  },
+                }}
+              >
+                <ChatBubbleOutlineIcon fontSize="small" />
+              </Badge>
             </IconButton>
 
             <IconButton
@@ -146,8 +185,10 @@ function Header() {
               onClose={handleMenuClose}
               transformOrigin={{ horizontal: "right", vertical: "top" }}
               anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-              PaperProps={{
-                sx: { mt: 1, minWidth: 180 },
+              slotProps={{
+                paper: {
+                  sx: { mt: 1, minWidth: 180 },
+                },
               }}
             >
               <MenuItem onClick={() => handleMenuNavigation("/dashboard")}>

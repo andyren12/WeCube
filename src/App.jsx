@@ -11,6 +11,7 @@ import Browse from "./pages/Browse";
 import Competitions from "./pages/Competitions";
 import Sell from "./pages/Sell";
 import ListingDetail from "./pages/ListingDetail";
+import Messages from "./pages/Messages";
 
 function App() {
   return (
@@ -34,6 +35,8 @@ function App() {
               <Route path="/competitions" element={<Competitions />} />
               <Route path="/sell" element={<Sell />} />
               <Route path="/listing/:id" element={<ListingDetail />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/messages/:conversationId" element={<Messages />} />
               <Route
                 path="/my-listings"
                 element={

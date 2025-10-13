@@ -37,6 +37,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from "../contexts/AuthContext";
+import { createConversationRequest, getExistingConversation } from "../utils/messaging";
 
 function ListingDetail() {
   const { id } = useParams();
@@ -45,6 +46,10 @@ function ListingDetail() {
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [existingConversation, setExistingConversation] = useState(null);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [messageText, setMessageText] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [editData, setEditData] = useState({
     title: "",
     price: "",
@@ -59,6 +64,22 @@ function ListingDetail() {
   useEffect(() => {
     fetchListing();
   }, [id]);
+
+  useEffect(() => {
+    // Check for existing conversation when user and listing are loaded
+    if (currentUser && listing && currentUser.uid !== listing.userId) {
+      checkExistingConversation();
+    }
+  }, [currentUser, listing]);
+
+  const checkExistingConversation = async () => {
+    try {
+      const conversation = await getExistingConversation(id, currentUser.uid);
+      setExistingConversation(conversation);
+    } catch (error) {
+      console.error("Error checking existing conversation:", error);
+    }
+  };
 
   const fetchListing = async () => {
     try {
@@ -163,6 +184,73 @@ function ListingDetail() {
     }
   };
 
+  const handleMessageRequest = async () => {
+    if (!currentUser) {
+      alert("Please sign in to message the seller");
+      return;
+    }
+
+    if (currentUser.uid === listing.userId) {
+      alert("You cannot message yourself");
+      return;
+    }
+
+    if (!messageText.trim()) {
+      alert("Please enter a message");
+      return;
+    }
+
+    setSendingMessage(true);
+    try {
+      await createConversationRequest(
+        id,
+        listing.userId,
+        currentUser.uid,
+        messageText.trim()
+      );
+
+      setShowMessageDialog(false);
+      setMessageText("");
+
+      // Refresh conversation status
+      await checkExistingConversation();
+
+      alert("Message request sent! The seller will need to approve before you can chat.");
+    } catch (error) {
+      console.error("Error sending message request:", error);
+      alert(error.message || "Failed to send message request");
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const openMessageDialog = () => {
+    if (!currentUser) {
+      alert("Please sign in to message the seller");
+      return;
+    }
+    setShowMessageDialog(true);
+  };
+
+  const getMessageButtonText = () => {
+    if (!existingConversation) return "Message Owner";
+
+    switch (existingConversation.status) {
+      case "pending":
+        return "Request Pending";
+      case "approved":
+        return "Continue Chat";
+      case "rejected":
+        return "Request Declined";
+      default:
+        return "Message Owner";
+    }
+  };
+
+  const isMessageButtonDisabled = () => {
+    return existingConversation?.status === "pending" || existingConversation?.status === "rejected";
+  };
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -232,10 +320,19 @@ function ListingDetail() {
           </Button>
         ) : (
           <Box sx={{ display: "flex", gap: 1 }}>
-            <Button variant="outlined" color="info">
-              Message Owner
+            <Button
+              variant="outlined"
+              color="info"
+              onClick={
+                existingConversation?.status === "approved"
+                  ? () => navigate(`/messages/${existingConversation.id}`)
+                  : openMessageDialog
+              }
+              disabled={isMessageButtonDisabled()}
+            >
+              {getMessageButtonText()}
             </Button>
-            <Button variant="contained">Purchase</Button>
+            <Button variant="contained" color="success">Purchase</Button>
           </Box>
         )}
       </Box>
@@ -468,6 +565,57 @@ function ListingDetail() {
           <Button onClick={handleEditToggle}>Cancel</Button>
           <Button onClick={handleSave} variant="contained" startIcon={<Save />}>
             Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Message Request Dialog */}
+      <Dialog
+        open={showMessageDialog}
+        onClose={() => setShowMessageDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            Send Message Request
+            <Button onClick={() => setShowMessageDialog(false)}>
+              <Close />
+            </Button>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Send a message to inquire about this listing. The seller will need to approve your request before you can chat.
+          </Typography>
+          <TextField
+            autoFocus
+            label="Your message"
+            fullWidth
+            multiline
+            rows={4}
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            placeholder="Hi, I'm interested in this cube. Is it still available?"
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowMessageDialog(false)} disabled={sendingMessage}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleMessageRequest}
+            variant="contained"
+            disabled={sendingMessage || !messageText.trim()}
+          >
+            {sendingMessage ? "Sending..." : "Send Request"}
           </Button>
         </DialogActions>
       </Dialog>
