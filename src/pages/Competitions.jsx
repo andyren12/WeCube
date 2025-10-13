@@ -17,7 +17,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../firebase";
-import { getUpcomingCompetitions, searchCompetitions } from "../utils/wcaApi";
+import { getUpcomingCompetitions, searchCompetitions, getCacheStatus } from "../utils/wcaApi";
 
 function Competitions() {
   const [competitions, setCompetitions] = useState([]);
@@ -42,7 +42,9 @@ function Competitions() {
   const loadCompetitions = async () => {
     try {
       setLoadingCompetitions(true);
+      console.log('Cache status before loading:', getCacheStatus());
       const upcomingCompetitions = await getUpcomingCompetitions(50);
+      console.log('Cache status after loading:', getCacheStatus());
       setCompetitions(upcomingCompetitions);
     } catch (err) {
       console.error('Error loading competitions:', err);

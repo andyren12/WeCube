@@ -45,9 +45,11 @@ function Sell() {
   });
   const [isPublishing, setIsPublishing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [animationPhase, setAnimationPhase] = useState(0); // 0: initial, 1: show check, 2: turn green
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [sellerOnboardingComplete, setSellerOnboardingComplete] = useState(false);
+  const [sellerOnboardingComplete, setSellerOnboardingComplete] =
+    useState(false);
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
   const [competitions, setCompetitions] = useState([]);
   const [selectedCompetitions, setSelectedCompetitions] = useState([]);
@@ -64,7 +66,10 @@ function Sell() {
   // Handle URL parameters for onboarding redirect
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success') === 'true' || urlParams.get('refresh') === 'true') {
+    if (
+      urlParams.get("success") === "true" ||
+      urlParams.get("refresh") === "true"
+    ) {
       // User returned from Stripe onboarding, recheck status
       if (currentUser) {
         setTimeout(() => checkSellerOnboarding(), 1000); // Small delay to allow Stripe to process
@@ -74,7 +79,7 @@ function Sell() {
     }
 
     // Debug helper - clear stripe data if ?clear=true
-    if (urlParams.get('clear') === 'true' && currentUser) {
+    if (urlParams.get("clear") === "true" && currentUser) {
       clearStripeData();
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -82,14 +87,14 @@ function Sell() {
 
   const clearStripeData = async () => {
     try {
-      await updateDoc(doc(db, 'users', currentUser.uid), {
+      await updateDoc(doc(db, "users", currentUser.uid), {
         stripeAccountId: null,
-        sellerOnboardingStarted: null
+        sellerOnboardingStarted: null,
       });
       setSellerOnboardingComplete(false);
-      console.log('Cleared Stripe data for fresh start');
+      console.log("Cleared Stripe data for fresh start");
     } catch (error) {
-      console.error('Error clearing Stripe data:', error);
+      console.error("Error clearing Stripe data:", error);
     }
   };
 
@@ -118,21 +123,26 @@ function Sell() {
   const checkSellerOnboarding = async () => {
     try {
       setCheckingOnboarding(true);
-      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
       const userData = userDoc.data();
 
       if (userData?.stripeAccountId) {
         try {
-          const account = await getConnectAccountStatus(userData.stripeAccountId);
+          const account = await getConnectAccountStatus(
+            userData.stripeAccountId
+          );
           setSellerOnboardingComplete(account.isComplete);
         } catch (accountError) {
           // If account doesn't exist or access is revoked, clear it and start fresh
-          console.warn('Stripe account not accessible, clearing stored account ID:', accountError);
+          console.warn(
+            "Stripe account not accessible, clearing stored account ID:",
+            accountError
+          );
 
           // Clear the invalid account ID from Firebase
-          await updateDoc(doc(db, 'users', currentUser.uid), {
+          await updateDoc(doc(db, "users", currentUser.uid), {
             stripeAccountId: null,
-            sellerOnboardingStarted: null
+            sellerOnboardingStarted: null,
           });
 
           setSellerOnboardingComplete(false);
@@ -141,7 +151,7 @@ function Sell() {
         setSellerOnboardingComplete(false);
       }
     } catch (error) {
-      console.error('Error checking seller onboarding:', error);
+      console.error("Error checking seller onboarding:", error);
       setSellerOnboardingComplete(false);
     } finally {
       setCheckingOnboarding(false);
@@ -181,13 +191,13 @@ function Sell() {
     }));
 
     // Load competitions when meetup is selected
-    if (option === 'meetup' && isChecked) {
-      console.log('Meetup option selected, loading competitions');
+    if (option === "meetup" && isChecked) {
+      console.log("Meetup option selected, loading competitions");
       loadCompetitions(); // Always load competitions when meetup is enabled
     }
 
     // Clear selected competitions when meetup is deselected
-    if (option === 'meetup' && !isChecked) {
+    if (option === "meetup" && !isChecked) {
       setSelectedCompetitions([]);
       setCompetitions([]); // Also clear the competitions list
     }
@@ -198,9 +208,12 @@ function Sell() {
     try {
       const upcomingCompetitions = await getUpcomingCompetitions(100);
       setCompetitions(upcomingCompetitions);
-      console.log('Successfully loaded competitions:', upcomingCompetitions.length);
+      console.log(
+        "Successfully loaded competitions:",
+        upcomingCompetitions.length
+      );
     } catch (error) {
-      console.error('Error loading competitions:', error);
+      console.error("Error loading competitions:", error);
       // Don't throw the error, just log it so the search can still work
       setCompetitions([]);
     } finally {
@@ -209,18 +222,22 @@ function Sell() {
   };
 
   const handleCompetitionSearch = async (_, value) => {
-    console.log('Competition search triggered with value:', value);
+    console.log("Competition search triggered with value:", value);
 
     // Only search if user types something significant
-    if (typeof value === 'string' && value.length > 2) {
+    if (typeof value === "string" && value.length > 2) {
       setLoadingCompetitions(true);
       try {
-        console.log('Searching for competitions with query:', value);
+        console.log("Searching for competitions with query:", value);
         const searchResults = await searchCompetitions(value, 50);
-        console.log('Search results:', searchResults.length, 'competitions found');
+        console.log(
+          "Search results:",
+          searchResults.length,
+          "competitions found"
+        );
         setCompetitions(searchResults);
       } catch (error) {
-        console.error('Error searching competitions:', error);
+        console.error("Error searching competitions:", error);
         // Keep existing competitions if search fails
       } finally {
         setLoadingCompetitions(false);
@@ -230,6 +247,8 @@ function Sell() {
   };
 
   const isDeliveryValid = deliveryOptions.shipping || deliveryOptions.meetup;
+  const isCompetitionValid =
+    !deliveryOptions.meetup || selectedCompetitions.length > 0;
 
   const handleInputChange = (field) => (event) => {
     setListingData((prev) => ({
@@ -249,12 +268,19 @@ function Sell() {
   };
 
   const handlePublishListing = async () => {
+    setHasAttemptedSubmit(true);
+
     const isPhotosValid = selectedPhotos.length > 0;
     const isBasicInfoValid =
       listingData.title && listingData.price && listingData.condition;
 
     if (!isPhotosValid || !isBasicInfoValid || !isDeliveryValid) {
       alert("Please fill in all required fields");
+      return;
+    }
+
+    if (!isCompetitionValid) {
+      alert("Please select at least one competition for meetup delivery");
       return;
     }
 
@@ -283,7 +309,7 @@ function Sell() {
       }));
 
       // Get user's Stripe account ID for marketplace payments
-      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
       const userData = userDoc.data();
 
       const listingToSave = {
@@ -293,7 +319,7 @@ function Sell() {
         condition: listingData.condition,
         photos: photosForStorage,
         deliveryOptions,
-        competitions: selectedCompetitions.map(comp => ({
+        competitions: selectedCompetitions.map((comp) => ({
           id: comp.id,
           name: comp.name,
           city: comp.city,
@@ -301,7 +327,7 @@ function Sell() {
           startDate: comp.startDate,
           endDate: comp.endDate,
           displayName: comp.displayName,
-          dateRange: comp.dateRange
+          dateRange: comp.dateRange,
         })),
         status: "active", // New listings start as active
         createdAt: new Date(),
@@ -317,6 +343,7 @@ function Sell() {
       console.log("Listing saved successfully with ID:", docRef.id);
 
       setShowSuccess(true);
+      setHasAttemptedSubmit(false); // Reset validation state on successful submit
 
       setTimeout(() => {
         handleClearListing();
@@ -353,6 +380,7 @@ function Sell() {
       meetup: false,
     });
     setSelectedCompetitions([]);
+    setHasAttemptedSubmit(false); // Reset validation state when clearing form
   };
 
   if (!currentUser) {
@@ -396,8 +424,9 @@ function Sell() {
             Become a Verified Seller
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            To sell on WeCube, you need to complete a quick registration process.
-            This helps us ensure secure payments and comply with financial regulations.
+            To sell on WeCube, you need to complete a quick registration
+            process. This helps us ensure secure payments and comply with
+            financial regulations.
           </Typography>
           <Button
             variant="contained"
@@ -626,7 +655,7 @@ function Sell() {
 
             <FormControl
               sx={{ width: "100%" }}
-              error={!isDeliveryValid}
+              error={hasAttemptedSubmit && (!isDeliveryValid || !isCompetitionValid)}
               required
             >
               <FormGroup>
@@ -662,8 +691,13 @@ function Sell() {
               {/* Competition Selection */}
               {deliveryOptions.meetup && (
                 <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Select competitions where this cube will be available for meetup:
+                  <Typography
+                    variant="body2"
+                    color={hasAttemptedSubmit && !isCompetitionValid ? "error" : "text.secondary"}
+                    gutterBottom
+                  >
+                    Select competitions where this cube will be available for
+                    meetup: *
                   </Typography>
                   {loadingCompetitions ? (
                     <Skeleton variant="rectangular" width="100%" height={56} />
@@ -677,16 +711,27 @@ function Sell() {
                         setSelectedCompetitions(newValue);
                       }}
                       onInputChange={handleCompetitionSearch}
-                      noOptionsText={competitions.length === 0 ? 'No competitions loaded. Try typing to search.' : 'No competitions match your search.'}
+                      noOptionsText={
+                        competitions.length === 0
+                          ? "No competitions loaded. Try typing to search."
+                          : "No competitions match your search."
+                      }
                       loading={loadingCompetitions}
                       loadingText="Loading competitions..."
                       filterOptions={(options, { inputValue }) => {
                         // Show all options if no input, or filter by input
                         if (!inputValue) return options;
-                        return options.filter(option =>
-                          option.name.toLowerCase().includes(inputValue.toLowerCase()) ||
-                          option.city.toLowerCase().includes(inputValue.toLowerCase()) ||
-                          option.country.toLowerCase().includes(inputValue.toLowerCase())
+                        return options.filter(
+                          (option) =>
+                            option.name
+                              .toLowerCase()
+                              .includes(inputValue.toLowerCase()) ||
+                            option.city
+                              .toLowerCase()
+                              .includes(inputValue.toLowerCase()) ||
+                            option.country
+                              .toLowerCase()
+                              .includes(inputValue.toLowerCase())
                         );
                       }}
                       renderInput={(params) => (
@@ -695,6 +740,7 @@ function Sell() {
                           label="Search competitions"
                           placeholder="Type to search competitions..."
                           variant="outlined"
+                          error={hasAttemptedSubmit && !isCompetitionValid}
                         />
                       )}
                       renderTags={(tagValue, getTagProps) =>
@@ -715,7 +761,8 @@ function Sell() {
                               {option.name}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                              {option.city}, {option.country} • {option.dateRange}
+                              {option.city}, {option.country} •{" "}
+                              {option.dateRange}
                             </Typography>
                           </Box>
                         </Box>
@@ -725,9 +772,14 @@ function Sell() {
                 </Box>
               )}
 
-              {!isDeliveryValid && (
-                <FormHelperText>
+              {!deliveryOptions.shipping && !deliveryOptions.meetup && (
+                <FormHelperText error={hasAttemptedSubmit}>
                   Please select at least one delivery option
+                </FormHelperText>
+              )}
+              {deliveryOptions.meetup && selectedCompetitions.length === 0 && (
+                <FormHelperText error={hasAttemptedSubmit}>
+                  Please select at least one competition for meetup delivery
                 </FormHelperText>
               )}
             </FormControl>
@@ -747,7 +799,7 @@ function Sell() {
             variant="contained"
             size="large"
             onClick={handlePublishListing}
-            disabled={isPublishing}
+            disabled={isPublishing || !isDeliveryValid || !isCompetitionValid}
             sx={{ px: 6, py: 2 }}
           >
             {isPublishing ? "Publishing..." : "Publish Listing"}
