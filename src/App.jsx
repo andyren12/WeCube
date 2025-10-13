@@ -5,7 +5,6 @@ import "./App.css";
 import theme from "./theme";
 import { AuthProvider } from "./contexts/AuthContext";
 import Header from "./components/Header";
-import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Browse from "./pages/Browse";
 import Competitions from "./pages/Competitions";
@@ -23,15 +22,14 @@ function App() {
             component="main"
             sx={{
               pt: 8,
-              display: 'flex',
-              justifyContent: 'center',
-              width: '100vw'
+              display: "flex",
+              justifyContent: "center",
+              width: "100vw",
             }}
           >
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Browse />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/browse" element={<Browse />} />
               <Route path="/competitions" element={<Competitions />} />
               <Route path="/sell" element={<Sell />} />
               <Route path="/listing/:id" element={<ListingDetail />} />

@@ -122,7 +122,7 @@ function Header() {
           <Box sx={{ flexGrow: 1 }} />
 
           <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3, mr: 3 }}>
-            <Button component={Link} to="/browse" color="inherit">
+            <Button component={Link} to="/" color="inherit">
               Browse
             </Button>
             <Button component={Link} to="/competitions" color="inherit">
@@ -210,11 +210,7 @@ function Header() {
         </Toolbar>
       </AppBar>
 
-      <AuthModal
-        open={showAuth}
-        onClose={closeModals}
-        initialMode={authMode}
-      />
+      <AuthModal open={showAuth} onClose={closeModals} initialMode={authMode} />
 
       <Dialog
         open={showLogoutConfirm}
