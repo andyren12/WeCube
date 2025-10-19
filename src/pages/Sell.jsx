@@ -29,7 +29,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { uploadMultipleImages } from "../utils/s3";
 import { getConnectAccountStatus } from "../utils/stripe";
 import SellerOnboarding from "../components/SellerOnboarding";
-import { getUpcomingCompetitions, searchCompetitions } from "../utils/wcaApi";
+import { getUpcomingCompetitions, searchCompetitions, getCacheStatus } from "../utils/wcaApi";
 
 function Sell() {
   const [selectedPhotos, setSelectedPhotos] = useState([]);
@@ -206,7 +206,11 @@ function Sell() {
   const loadCompetitions = async () => {
     setLoadingCompetitions(true);
     try {
-      const upcomingCompetitions = await getUpcomingCompetitions(100);
+      console.log("Starting to load competitions...");
+      console.log("Cache status before loading:", getCacheStatus());
+      const upcomingCompetitions = await getUpcomingCompetitions(500); // Get more competitions
+      console.log("Received competitions data:", upcomingCompetitions);
+      console.log("Cache status after loading:", getCacheStatus());
       setCompetitions(upcomingCompetitions);
       console.log(
         "Successfully loaded competitions:",
@@ -214,6 +218,7 @@ function Sell() {
       );
     } catch (error) {
       console.error("Error loading competitions:", error);
+      console.error("Error details:", error.message, error.stack);
       // Don't throw the error, just log it so the search can still work
       setCompetitions([]);
     } finally {
@@ -229,7 +234,7 @@ function Sell() {
       setLoadingCompetitions(true);
       try {
         console.log("Searching for competitions with query:", value);
-        const searchResults = await searchCompetitions(value, 50);
+        const searchResults = await searchCompetitions(value, 100);
         console.log(
           "Search results:",
           searchResults.length,

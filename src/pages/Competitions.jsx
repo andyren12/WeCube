@@ -43,7 +43,7 @@ function Competitions() {
     try {
       setLoadingCompetitions(true);
       console.log('Cache status before loading:', getCacheStatus());
-      const upcomingCompetitions = await getUpcomingCompetitions(50);
+      const upcomingCompetitions = await getUpcomingCompetitions(500);
       console.log('Cache status after loading:', getCacheStatus());
       setCompetitions(upcomingCompetitions);
     } catch (err) {
